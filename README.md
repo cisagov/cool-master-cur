@@ -4,34 +4,67 @@
 [![License](https://img.shields.io/github/license/cisagov/cool-master-cur)](https://spdx.org/licenses/)
 [![CodeQL](https://github.com/cisagov/cool-master-cur/workflows/CodeQL/badge.svg)](https://github.com/cisagov/cool-master-cur/actions/workflows/codeql-analysis.yml)
 
-This is a generic skeleton project that can be used to quickly get a
-new [cisagov](https://github.com/cisagov) [Terraform
-module](https://www.terraform.io/docs/modules/index.html) GitHub
-repository started.  This skeleton project contains [licensing
-information](LICENSE), as well as [pre-commit
-hooks](https://pre-commit.com) and
-[GitHub Actions](https://github.com/features/actions) configurations
-appropriate for the major languages that we use.
+This is a Terraform module for creating resources in a COOL Master account in
+order to replicate AWS Cost and Usage Reports (CUR) to a designated S3 bucket.
 
-See the [Terraform
-documentation](https://www.terraform.io/docs/modules/index.html) for
-more details on Terraform modules and the standard module structure.
+## Pre-requisites ##
+
+- [Terraform](https://www.terraform.io/) installed on your system.
+- An accessible AWS S3 bucket to store Terraform state
+  (specified in [backend.tf](backend.tf)).
+- An accessible AWS DynamoDB database to store the Terraform state lock
+  (specified in [backend.tf](backend.tf)).
+- Access to all of the Terraform remote states specified in
+  [remote_states.tf](remote_states.tf).
 
 ## Usage ##
 
-```hcl
-module "example" {
-  source = "github.com/cisagov/cool-master-cur?ref=v0.0.1"
+For the purposes of these instructions, assume the environment is named "dev";
+replace "dev" in the instructions below with your environment name if needed.
 
-  aws_region            = "us-west-1"
-  aws_availability_zone = "b"
-  subnet_id             = "subnet-0123456789abcdef0"
-}
-```
+1. Create a backend configuration file named `dev.tfconfig` containing the name
+   of the bucket where Terraform state is stored for that environment.
 
-## Examples ##
+    ```hcl
+    bucket = "my-dev-terraform-state-bucket"
+    ```
 
-- [Basic usage](https://github.com/cisagov/cool-master-cur/tree/develop/examples/basic_usage)
+1. Initialize the Terraform backend for the "dev" environment using your backend
+   configuration file:
+
+    ```console
+    terraform init -upgrade -backend-config=dev.tfconfig
+    ```
+
+    > [!NOTE] When performing this step for additional environments (i.e. not
+    > your first environment), use the `-reconfigure` flag:
+    >
+    > ```console
+    > terraform init -upgrade -backend-config=other-env.tfconfig -reconfigure
+    > ```
+
+1. Create a Terraform workspace (if you haven't already done so) by running
+   `terraform workspace new dev`
+1. Create a `dev.tfvars` file with all required variables and any optional
+   variables that you wish to override (see [Inputs](#inputs) below for
+   details):
+
+   ```console
+   data_export_bucket_name                   = "my-cur-export-bucket"
+   data_export_completion_report_bucket_name = "my-cur-export-completion-report-bucket"
+   destination_bucket_account_id             = "123456789012"
+   destination_bucket_name                   = "destination-cur-bucket"
+
+   tags = {
+     Team        = "Your Team Name"
+     Application = "COOL - Master CUR"
+     Workspace   = "dev"
+   }
+
+   terraform_state_bucket = "my-terraform-state-bucket"
+   ```
+
+1. Run the command `terraform apply -var-file=dev.tfvars`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements ##
@@ -46,6 +79,8 @@ module "example" {
 | Name | Version |
 |------|---------|
 | aws | >= 4.9 |
+| aws.master | >= 4.9 |
+| terraform | n/a |
 
 ## Modules ##
 
@@ -55,42 +90,57 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_instance.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) | resource |
-| [aws_ami.example](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | data source |
-| [aws_default_tags.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/default_tags) | data source |
+| [aws_iam_policy.replication_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.replication_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.replication_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_s3_bucket.completion_report](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket_ownership_controls.completion_report](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
+| [aws_s3_bucket_ownership_controls.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_ownership_controls) | resource |
+| [aws_s3_bucket_policy.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
+| [aws_s3_bucket_public_access_block.completion_report](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
+| [aws_s3_bucket_public_access_block.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
+| [aws_s3_bucket_replication_configuration.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_replication_configuration) | resource |
+| [aws_s3_bucket_server_side_encryption_configuration.completion_report](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+| [aws_s3_bucket_server_side_encryption_configuration.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+| [aws_s3_bucket_versioning.export](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_versioning) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_caller_identity.master](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.assume_role_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.export_bucket_policy_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.replication_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [terraform_remote_state.master](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs ##
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| ami\_owner\_account\_id | The ID of the AWS account that owns the Example AMI, or "self" if the AMI is owned by the same account as the provisioner. | `string` | `"self"` | no |
-| aws\_availability\_zone | The AWS availability zone to deploy into (e.g. a, b, c, etc.). | `string` | `"a"` | no |
 | aws\_region | The AWS region to deploy into (e.g. us-east-1). | `string` | `"us-east-1"` | no |
-| subnet\_id | The ID of the AWS subnet to deploy into (e.g. subnet-0123456789abcdef0). | `string` | n/a | yes |
+| data\_export\_bucket\_name | The name of the S3 bucket where cost and usage data exports will be stored. | `string` | n/a | yes |
+| data\_export\_completion\_report\_bucket\_name | The name of the S3 bucket where cost and usage data export completion reports will be stored. | `string` | n/a | yes |
+| destination\_bucket\_account\_id | The AWS account ID that owns the S3 bucket to which cost and usage reports will be replicated. | `string` | n/a | yes |
+| destination\_bucket\_name | The name of the S3 bucket to which cost and usage reports will be replicated. | `string` | n/a | yes |
+| replication\_policy\_description | The description of the IAM policy for S3 replication. | `string` | `"IAM policy to enable replication of Cost and Usage Report data exports to the destination bucket."` | no |
+| replication\_policy\_name | The name of the IAM policy for S3 replication. | `string` | `"cur-report-replication-policy"` | no |
+| replication\_role\_description | The description of the IAM role for S3 replication. | `string` | `"IAM role that can perform replication of Cost and Usage Report data exports to the destination bucket."` | no |
+| replication\_role\_name | The name of the IAM role for S3 replication. | `string` | `"cur-report-replication-role"` | no |
+| replication\_rule\_id | The ID to assign to the S3 replication rule for Cost and Usage Report data exports. | `string` | `"cur-replication"` | no |
+| tags | Tags to apply to all AWS resources created. | `map(string)` | `{}` | no |
+| terraform\_state\_bucket | The name of the S3 bucket where Terraform state is stored. | `string` | n/a | yes |
 
 ## Outputs ##
 
 | Name | Description |
 |------|-------------|
-| arn | The EC2 instance ARN. |
-| availability\_zone | The AZ where the EC2 instance is deployed. |
-| id | The EC2 instance ID. |
-| private\_ip | The private IP of the EC2 instance. |
-| subnet\_id | The ID of the subnet where the EC2 instance is deployed. |
+| completion\_report\_bucket | The name of the S3 bucket where cost and usage completion reports are stored. |
+| data\_export\_bucket | The name of the S3 bucket where cost and usage data exports are stored. |
+| replication\_role\_arn | The ARN of the IAM role that can be assumed to perform replication of CUR data export reports. |
 <!-- END_TF_DOCS -->
 
 ## Notes ##
 
 Running `pre-commit` requires running `terraform init` in every directory that
-contains Terraform code. In this repository, these are the main directory and
-every directory under `examples/`.
-
-## New Repositories from a Skeleton ##
-
-Please see our [Project Setup guide](https://github.com/cisagov/development-guide/tree/develop/project_setup)
-for step-by-step instructions on how to start a new repository from
-a skeleton. This will save you time and effort when configuring a
-new repository!
+contains Terraform code. In this repository, this is just the main directory.
 
 ## Contributing ##
 
