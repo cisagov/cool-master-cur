@@ -132,8 +132,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| completion\_report\_bucket | The name of the S3 bucket where cost and usage completion reports are stored. |
-| data\_export\_bucket | The name of the S3 bucket where cost and usage data exports are stored. |
+| completion\_report\_bucket | The S3 bucket where cost and usage completion reports are stored. |
+| data\_export\_bucket | The S3 bucket where cost and usage data exports are stored. |
 | replication\_role\_arn | The ARN of the IAM role that can be assumed to perform replication of CUR data export reports. |
 <!-- END_TF_DOCS -->
 

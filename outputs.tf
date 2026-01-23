@@ -1,10 +1,10 @@
 output "completion_report_bucket" {
-  description = "The name of the S3 bucket where cost and usage completion reports are stored."
+  description = "The S3 bucket where cost and usage completion reports are stored."
   value       = aws_s3_bucket.completion_report
 }
 
 output "data_export_bucket" {
-  description = "The name of the S3 bucket where cost and usage data exports are stored."
+  description = "The S3 bucket where cost and usage data exports are stored."
   value       = aws_s3_bucket.export
 }
 
