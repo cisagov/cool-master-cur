@@ -9,6 +9,11 @@ resource "aws_s3_bucket_replication_configuration" "export" {
   bucket = aws_s3_bucket.export.id
   role   = aws_iam_role.replication_role.arn
 
+  depends_on = [
+    aws_s3_bucket_versioning.export,
+    aws_iam_role_policy_attachment.replication_policy_attachment,
+  ]
+
   rule {
     id     = var.replication_rule_id
     status = "Enabled"
