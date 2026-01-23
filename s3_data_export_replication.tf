@@ -10,8 +10,8 @@ resource "aws_s3_bucket_replication_configuration" "export" {
   role   = aws_iam_role.replication_role.arn
 
   depends_on = [
-    aws_s3_bucket_versioning.export,
     aws_iam_role_policy_attachment.replication_policy_attachment,
+    aws_s3_bucket_versioning.export,
   ]
 
   rule {

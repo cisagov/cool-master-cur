@@ -91,8 +91,8 @@ data "aws_iam_policy_document" "export_bucket_policy_doc" {
 
     principals {
       identifiers = [
-        "billingreports.amazonaws.com",
         "bcm-data-exports.amazonaws.com",
+        "billingreports.amazonaws.com",
       ]
       type = "Service"
     }
