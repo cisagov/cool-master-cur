@@ -70,14 +70,14 @@ replace "dev" in the instructions below with your environment name if needed.
 ## Requirements ##
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | terraform | >= 1.1 |
 | aws | >= 4.9 |
 
 ## Providers ##
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | aws | >= 4.9 |
 | aws.master | >= 4.9 |
 | terraform | n/a |
@@ -89,7 +89,7 @@ No modules.
 ## Resources ##
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_policy.replication_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.replication_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.replication_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
@@ -114,7 +114,7 @@ No modules.
 ## Inputs ##
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | aws\_region | The AWS region to deploy into (e.g. us-east-1). | `string` | `"us-east-1"` | no |
 | data\_export\_bucket\_name | The name of the S3 bucket where cost and usage data exports will be stored. | `string` | n/a | yes |
 | data\_export\_completion\_report\_bucket\_name | The name of the S3 bucket where cost and usage data export completion reports will be stored. | `string` | n/a | yes |
@@ -131,7 +131,7 @@ No modules.
 ## Outputs ##
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | completion\_report\_bucket | The S3 bucket where cost and usage completion reports are stored. |
 | data\_export\_bucket | The S3 bucket where cost and usage data exports are stored. |
 | replication\_role\_arn | The ARN of the IAM role that can be assumed to perform replication of CUR data export reports. |
